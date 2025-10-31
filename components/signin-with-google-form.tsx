@@ -2,16 +2,22 @@
 
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { signIn } from "@/auth";
+import { signInWithGoogleAction } from "@/app/actions";
 
 export function SignInWitjGoogleForm() {
   const [isPending, setIsPending] = useState(false);
 
   async function handleSignInWithGoogle() {
-    await signIn.google();
+    try {
+      setIsPending(true);
+      await signInWithGoogleAction();
+    } catch (error) {
+      console.error("Sign in error:", error);
+      setIsPending(false);
+    }
   }
+
   return (
     <div>
       <Button
