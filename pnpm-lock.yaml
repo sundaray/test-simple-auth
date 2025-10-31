@@ -33,8 +33,8 @@ importers:
         specifier: 19.2.0
         version: 19.2.0(react@19.2.0)
       simple-next-auth:
-        specifier: file:/Users/hemanta/Documents/simple-next-auth-0.0.1.tgz
-        version: file:../simple-next-auth-0.0.1.tgz(next@16.0.1(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
+        specifier: file:../simple-auth
+        version: file:../simple-auth(next@16.0.1(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
@@ -1814,9 +1814,8 @@ packages:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
     engines: {node: '>= 0.4'}
 
-  simple-next-auth@file:../simple-next-auth-0.0.1.tgz:
-    resolution: {integrity: sha512-lfzEmZR0a9LLE/t4dofh3wx42e3Q2QWuoLXUrXY/3DEmI8OWlIAOBFrISDuV9sk09fBm1jc4C+nLSr/yiT1WUg==, tarball: file:../simple-next-auth-0.0.1.tgz}
-    version: 0.0.1
+  simple-next-auth@file:../simple-auth:
+    resolution: {directory: ../simple-auth, type: directory}
     peerDependencies:
       next: ^16.0.1
       react: ^19.2.0
@@ -3915,7 +3914,7 @@ snapshots:
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
 
-  simple-next-auth@file:../simple-next-auth-0.0.1.tgz(next@16.0.1(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0):
+  simple-next-auth@file:../simple-auth(next@16.0.1(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0):
     dependencies:
       jose: 6.1.0
       neverthrow: 8.2.0

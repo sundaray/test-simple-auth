@@ -17,7 +17,7 @@
     "next": "16.0.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "simple-next-auth": "file:/Users/hemanta/Documents/simple-next-auth-0.0.1.tgz",
+    "simple-next-auth": "file:../simple-auth",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
