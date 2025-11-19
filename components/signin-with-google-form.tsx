@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { signInWithGoogleAction } from "@/app/actions";
 
-export function SignInWitjGoogleForm() {
+export function SignInWithGoogleForm() {
   const [isPending, setIsPending] = useState(false);
 
   async function handleSignInWithGoogle() {

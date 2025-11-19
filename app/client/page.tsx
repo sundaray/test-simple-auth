@@ -3,8 +3,19 @@
 import { useUserSession } from "super-auth/react";
 
 export default function ClientPage() {
-  const session = useUserSession();
+  const { isLoading, isError, isAuthenticated, session } = useUserSession();
 
-  console.log("User session in Client Component: ", session);
-  return <h1 className="text-4xl mt-40">Welcome to your dashboard!</h1>;
+  if (isLoading) {
+    return <h1 className="text-2xl">Loading...</h1>;
+  }
+
+  if (isError) {
+    return <h1>Error fetching user session.</h1>;
+  }
+
+  if (!isAuthenticated) {
+    return <h1>Please sign in.</h1>;
+  }
+
+  return <h1 className="text-4xl mt-40">{session?.email}</h1>;
 }

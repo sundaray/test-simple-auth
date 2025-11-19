@@ -1,28 +1,22 @@
 import { SignInWithGoogleForm } from "@/components/signin-with-google-form";
-import { CredentialsSignInForm } from "@/components/auth/credentials-signin-form";
+import { CredentialsSignUpForm } from "@/components/auth/credentials-signup-form";
 import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sign in",
+  title: "Sign up",
 };
 
-export default async function SignIn({
-  searchParams,
-}: {
-  searchParams: Promise<{ next: string }>;
-}) {
-  const resolvedParams = await searchParams;
-  const next = resolvedParams.next || "/dashboard";
-
+export default function SignUp() {
   return (
     <div className="mx-auto my-36 max-w-[380px] px-4">
       <h2 className="text-center text-2xl font-semibold tracking-tight text-gray-900">
-        Welcome back
+        Create an account
       </h2>
-      <p className="mt-1 text-center text-gray-600">Sign in to your account</p>
+      <p className="mt-1 text-center text-gray-600">Enter your details below</p>
 
       <div className="mt-10 grid gap-4">
+        {/* Google form can likely be reused for Sign Up if the provider supports auto-creation */}
         <SignInWithGoogleForm />
 
         <div className="relative py-2">
@@ -34,15 +28,15 @@ export default async function SignIn({
           </div>
         </div>
 
-        <CredentialsSignInForm next={next} />
+        <CredentialsSignUpForm />
 
         <div className="mt-2 text-center text-sm">
-          <span className="text-gray-500">Don&apos;t have an account? </span>
+          <span className="text-gray-500">Already have an account? </span>
           <Link
-            href="/signup"
+            href="/signin"
             className="font-medium text-sky-600 hover:underline hover:underline-offset-2"
           >
-            Sign Up
+            Sign In
           </Link>
         </div>
       </div>
