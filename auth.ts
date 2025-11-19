@@ -1,21 +1,34 @@
 import { initAuth } from "super-auth/next-js";
 import { Google } from "super-auth/providers/google";
+import { Credential } from "super-auth/providers/credential";
 
 export const { signIn, signOut, getUserSession, handlers } = initAuth({
   baseUrl: "http://localhost:3000",
   session: {
-    secret: "/kO4UMWvUOsoWiLACBlhykZ4TlPXT/mk7Qhwfg6zWrk=",
+    secret: process.env.SESSION_SECRET!,
     maxAge: 60 * 60 * 24 * 7,
   },
   providers: [
     Google({
-      clientId:
-        "1057649156345-5knm0r85qrhhumkt8smqmmg9kj84olvd.apps.googleusercontent.com",
-      clientSecret: "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",
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: "process.env.GOOGLE_CLIENT_SECRET",
       redirectUri: "http://localhost:3000/api/auth/callback/google",
       onAuthenticated: async (userClaims) => {
         console.log("Google user claims: ", userClaims);
         return { email: "hemanta@gmail.com", role: "admin" };
+      },
+    }),
+    Credential({
+      onSignUp: () => {},
+      onSignIn: () => {
+        return null;
+      },
+      emailVerification: {
+        path: "/api/auth/verify-email",
+        onError: "/",
+        onSuccess: "/",
+        sendVerificationEmail(params) {},
+        onEmailVerified(data) {},
       },
     }),
   ],
