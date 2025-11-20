@@ -7,9 +7,7 @@ import { signInSchema, signUpSchema } from "@/lib/schema";
 
 export async function signInWithGoogleAction() {
   try {
-    await signIn("google", {
-      redirectTo: "/dashboard",
-    });
+    await signIn("google", { redirectTo: "/dashboard" });
   } catch (error) {
     if (error instanceof AuthError) {
       console.log("Google sign-in error: ", error);

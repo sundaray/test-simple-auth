@@ -7,8 +7,13 @@ import {
   pgTable,
   pgEnum,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const providerEnum = pgEnum("provider", ["google", "credential"]);
+
+// --------------------------------------------
+// Users Table
+// --------------------------------------------
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -25,6 +30,9 @@ export const users = pgTable("users", {
     .$onUpdate(() => new Date()),
 });
 
+// --------------------------------------------
+// Accounts Table
+// --------------------------------------------
 export const accounts = pgTable(
   "accounts",
   {
@@ -39,11 +47,23 @@ export const accounts = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => ({
-    userProviderUnique: unique().on(table.userId, table.provider),
-  })
+  (table) => [unique().on(table.userId, table.provider)]
 );
 
+export const usersRelations = relations(users, ({ many }) => ({
+  accounts: many(accounts),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+// --------------------------------------------
+// Types
+// --------------------------------------------
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Account = typeof accounts.$inferSelect;

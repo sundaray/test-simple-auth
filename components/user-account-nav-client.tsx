@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { signOutAction } from "@/app/actions";
 
 export function UserAccountNavClient({ user }: { user: any }) {
@@ -39,8 +39,6 @@ export function UserAccountNavClient({ user }: { user: any }) {
       console.error("Sign out failed: ", error);
     }
   }
-
-  console.log("User inside the UserNavClient component: ", user);
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={handleOpenChange}>
