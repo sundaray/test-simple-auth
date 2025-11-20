@@ -3,7 +3,7 @@
 import { signIn, signOut } from "@/auth";
 import { AuthError } from "super-auth/core/errors";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
-import { signInSchema, signUpSchema, type SignUpValues } from "@/lib/schema";
+import { signInSchema, signUpSchema } from "@/lib/schema";
 
 export async function signInWithGoogleAction() {
   try {
