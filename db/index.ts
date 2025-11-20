@@ -4,5 +4,5 @@ import postgres from "postgres";
 
 config({ path: ".env.local" });
 
-const client = postgres(process.env.DATABASE_URL!);
-export const db = drizzle({ client });
+const client = postgres(process.env.DATABASE_URL!, { prepare: false });
+export const db = drizzle(client);

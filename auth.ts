@@ -3,7 +3,7 @@ import { Google } from "super-auth/providers/google";
 import { Credential } from "super-auth/providers/credential";
 
 export const { signIn, signOut, getUserSession, handlers } = initAuth({
-  baseUrl: "http://localhost:3000",
+  baseUrl: "process.env.BASE_URL!",
   session: {
     secret: process.env.SESSION_SECRET!,
     maxAge: 60 * 60 * 24 * 7,
@@ -11,8 +11,8 @@ export const { signIn, signOut, getUserSession, handlers } = initAuth({
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: "process.env.GOOGLE_CLIENT_SECRET",
-      redirectUri: "http://localhost:3000/api/auth/callback/google",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      redirectUri: process.env.GOOGLE_REDIRECT_UI!,
       onAuthenticated: async (userClaims) => {
         console.log("Google user claims: ", userClaims);
         return { email: "hemanta@gmail.com", role: "admin" };
