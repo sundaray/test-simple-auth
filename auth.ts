@@ -51,14 +51,6 @@ export const { signIn, signOut, getUserSession, handlers } = superAuth({
             providerAccountId: userClaims.sub,
           });
 
-          // Auto-upgrade email verification if Google confirms it
-          if (userClaims.email_verified && !existingUser.emailVerified) {
-            await db
-              .update(users)
-              .set({ emailVerified: true })
-              .where(eq(users.id, existingUser.id));
-          }
-
           return {
             userId: existingUser.id,
             email: existingUser.email,
@@ -98,7 +90,7 @@ export const { signIn, signOut, getUserSession, handlers } = superAuth({
       onSignUp: {
         // Check if user with credenial account exists
         checkUserExists: async (email) => {
-          const existingUser = await db.query.users.findFirst({
+          const existingUserAccount = await db.query.users.findFirst({
             where: eq(users.email, email),
             with: {
               accounts: {
@@ -106,18 +98,17 @@ export const { signIn, signOut, getUserSession, handlers } = superAuth({
               },
             },
           });
-
-          if (existingUser) {
+          if (existingUserAccount) {
             return true;
           }
-
           return false;
         },
         // Send verification email
         sendVerificationEmail: async ({ email, url }) => {},
         // Create user after email verification
         createUser: async ({ email, hashedPassword, ...rest }) => {
-          const existingUser = await db.query.users.findFirst({
+          // Existing email and account
+          const existingUserAccount = await db.query.users.findFirst({
             where: eq(users.email, email),
             with: {
               accounts: {
@@ -125,6 +116,15 @@ export const { signIn, signOut, getUserSession, handlers } = superAuth({
               },
             },
           });
+
+          if (existingUserAccount) {
+          }
+
+          // Check if user exists by email
+
+          // Email not found - Add email and account
+
+          // Email found - update email_verified column to true and create an account
         },
       },
       onSignIn: async ({ email }) => {
