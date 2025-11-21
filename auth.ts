@@ -1,11 +1,11 @@
-import { initAuth } from "super-auth/next-js";
+import { superAuth } from "super-auth/next-js";
 import { Google } from "super-auth/providers/google";
 import { Credential } from "super-auth/providers/credential";
 import { db } from "@/db";
 import { users, accounts } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
-export const { signIn, signOut, getUserSession, handlers } = initAuth({
+export const { signIn, signOut, getUserSession, handlers } = superAuth({
   baseUrl: "process.env.BASE_URL!",
   session: {
     secret: process.env.SESSION_SECRET!,
@@ -27,7 +27,7 @@ export const { signIn, signOut, getUserSession, handlers } = initAuth({
         });
 
         if (existingGoogleAccount) {
-          // ✅ Scenario 1: Google account exists - sign in
+          // Scenario 1: Google account exists - sign in
           return {
             userId: existingGoogleAccount.user.id,
             email: existingGoogleAccount.user.email,
@@ -43,8 +43,8 @@ export const { signIn, signOut, getUserSession, handlers } = initAuth({
         });
 
         if (existingUser) {
-          // ✅ Scenario 2: User exists, but Google account doesn't
-          // 🔗 LINK: Add Google account to existing user
+          // Scenario 2: User exists, but Google account doesn't
+          // Create a Google account
           await db.insert(accounts).values({
             userId: existingUser.id,
             provider: "google",
@@ -69,7 +69,6 @@ export const { signIn, signOut, getUserSession, handlers } = initAuth({
         }
 
         // Step 3: No user exists - create both user AND account
-        // ✅ Scenario 3: New user
         const [newUser] = await db
           .insert(users)
           .values({
@@ -97,8 +96,31 @@ export const { signIn, signOut, getUserSession, handlers } = initAuth({
     }),
     Credential({
       onSignUp: () => {},
-      onSignIn: () => {
-        return null;
+      onSignIn: async ({ email }) => {
+        const user = await db.query.users.findFirst({
+          where: eq(users.email, email),
+          with: {
+            accounts: {
+              where: eq(accounts.provider, "credential"),
+              columns: {
+                passwordHash: true,
+              },
+            },
+          },
+        });
+
+        if (!user || !user.accounts[0].passwordHash) {
+          return null;
+        }
+
+        const credentialAccount = user.accounts[0];
+
+        return {
+          email: user.email,
+          name: user.name,
+          picture: user.picture,
+          hashedPassword: credentialAccount.passwordHash,
+        };
       },
       emailVerification: {
         path: "/api/auth/verify-email",

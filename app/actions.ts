@@ -1,7 +1,7 @@
 "use server";
 
 import { signIn, signOut } from "@/auth";
-import { AuthError } from "super-auth/core/errors";
+import { SuperAuthError } from "super-auth/core/errors";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { signInSchema, signUpSchema } from "@/lib/schema";
 
@@ -9,7 +9,7 @@ export async function signInWithGoogleAction() {
   try {
     await signIn("google", { redirectTo: "/dashboard" });
   } catch (error) {
-    if (error instanceof AuthError) {
+    if (error instanceof SuperAuthError) {
       console.log("Google sign-in error: ", error);
     }
     if (isRedirectError(error)) {
@@ -33,24 +33,21 @@ export async function signInWithEmailAndPassword(next: string, data: unknown) {
     await signIn("credential", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: next,
+      redirectTo: `/${next}`,
     });
   } catch (error) {
-    if (isRedirectError(error)) throw error;
-
-    if (error instanceof AuthError) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+    if (error instanceof SuperAuthError) {
       switch (error.name) {
+        case "AccountNotFoundError":
+          return { error: "No account found with this email. Please sign up." };
+
         case "InvalidCredentialsError":
           return { error: "Invalid email or password." };
-        case "AccountNotFoundError":
-          return { error: "No account found with this email." };
-        case "VerifyEmailError":
-          return { error: "Please verify your email address." };
-        default:
-          return { error: error.message };
       }
     }
-    console.error(error);
     return { error: "Something went wrong. Please try again." };
   }
 }
