@@ -95,7 +95,38 @@ export const { signIn, signOut, getUserSession, handlers } = superAuth({
       },
     }),
     Credential({
-      onSignUp: () => {},
+      onSignUp: {
+        // Check if user with credenial account exists
+        checkUserExists: async (email) => {
+          const existingUser = await db.query.users.findFirst({
+            where: eq(users.email, email),
+            with: {
+              accounts: {
+                where: eq(accounts.provider, "credential"),
+              },
+            },
+          });
+
+          if (existingUser) {
+            return true;
+          }
+
+          return false;
+        },
+        // Send verification email
+        sendVerificationEmail: async ({ email, url }) => {},
+        // Create user after email verification
+        createUser: async ({ email, hashedPassword, ...rest }) => {
+          const existingUser = await db.query.users.findFirst({
+            where: eq(users.email, email),
+            with: {
+              accounts: {
+                where: eq(accounts.provider, "credential"),
+              },
+            },
+          });
+        },
+      },
       onSignIn: async ({ email }) => {
         const user = await db.query.users.findFirst({
           where: eq(users.email, email),
@@ -121,13 +152,6 @@ export const { signIn, signOut, getUserSession, handlers } = superAuth({
           picture: user.picture,
           hashedPassword: credentialAccount.passwordHash,
         };
-      },
-      emailVerification: {
-        path: "/api/auth/verify-email",
-        onError: "/",
-        onSuccess: "/",
-        sendVerificationEmail(params) {},
-        onEmailVerified(data) {},
       },
     }),
   ],

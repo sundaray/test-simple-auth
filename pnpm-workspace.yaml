@@ -1,0 +1,2 @@
+overrides:
+  super-auth: link:../super-auth
