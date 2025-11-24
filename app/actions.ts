@@ -135,6 +135,7 @@ export async function resetPasswordAction(token: string, newPassword: string) {
     await resetPassword(token, parsed.data.password);
     // This will redirect to /signin?password-reset=success
   } catch (error) {
+    console.log("Reset password error: ", error);
     if (isRedirectError(error)) {
       throw error;
     }
@@ -142,6 +143,8 @@ export async function resetPasswordAction(token: string, newPassword: string) {
     if (error instanceof SuperAuthError) {
       switch (error.name) {
         case "InvalidPasswordResetTokenError":
+          return { error: "Invalid or expired reset link." };
+        case "VerifyPasswordResetTokenError":
           return { error: "Invalid or expired reset link." };
         case "PasswordResetTokenAlreadyUsedError":
           return { error: "This reset link has already been used." };

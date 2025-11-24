@@ -4,6 +4,7 @@ import * as React from "react";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,11 +20,10 @@ import { FormErrorMessage } from "@/components/auth/form-error-message";
 import { resetPasswordAction } from "@/app/actions";
 import { resetPasswordSchema, type ResetPasswordValues } from "@/lib/schema";
 
-interface ResetPasswordFormProps {
-  token: string;
-}
+export function ResetPasswordForm() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
 
-export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
     useState(false);
@@ -39,6 +39,11 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   async function onSubmit(data: ResetPasswordValues) {
     setServerError(null);
+
+    if (!token) {
+      setServerError("Invalid reset link. Please request a new one.");
+      return;
+    }
 
     const result = await resetPasswordAction(token, data.password);
 

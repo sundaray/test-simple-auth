@@ -7,18 +7,7 @@ export const metadata: Metadata = {
   title: "Reset Password",
 };
 
-export default async function ResetPasswordPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ token?: string }>;
-}) {
-  const resolvedParams = await searchParams;
-  const token = resolvedParams.token;
-
-  if (!token) {
-    redirect("/forgot-password");
-  }
-
+export default async function ResetPasswordPage() {
   return (
     <div className="mx-auto my-36 max-w-[380px] px-4">
       <h2 className="text-center text-2xl font-semibold tracking-tight text-gray-900">
@@ -29,7 +18,7 @@ export default async function ResetPasswordPage({
       </p>
 
       <div className="mt-10">
-        <ResetPasswordForm token={token} />
+        <ResetPasswordForm />
 
         <div className="mt-4 text-center text-sm">
           <span className="text-gray-500">Remember your password? </span>
