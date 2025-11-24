@@ -72,12 +72,6 @@ export async function signUpWithEmailAndPassword(data: unknown) {
       password: parsed.data.password,
       name: parsed.data.name,
     });
-
-    // Success - return success message for the UI
-    return {
-      success: true,
-      message: "Verification email sent! Please check your inbox.",
-    };
   } catch (error) {
     if (isRedirectError(error)) {
       throw error;

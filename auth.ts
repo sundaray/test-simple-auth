@@ -3,7 +3,7 @@ import { Google } from "super-auth/providers/google";
 import { Credential } from "super-auth/providers/credential";
 import { db } from "@/db";
 import { users, accounts } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, exists } from "drizzle-orm";
 import { resend } from "@/lib/resend";
 import { EmailVerificationTemplate } from "@/components/email-verification-template";
 import { PasswordResetTemplate } from "@/components/password-reset-template";
@@ -108,7 +108,7 @@ export const {
 
           // If user doesn't exist at all, return false
           if (!user) {
-            return false;
+            return { exists: false };
           }
 
           // Step 2: Check if this user has a credential account
@@ -121,9 +121,9 @@ export const {
 
           // Return true only if credential account exists
           if (credentialAccount) {
-            return true;
+            return { exists: true };
           }
-          return false;
+          return { exists: false };
         },
         // Send verification email
         sendVerificationEmail: async ({ email, url }) => {
@@ -175,6 +175,7 @@ export const {
           });
         },
         redirects: {
+          checkEmail: "/check-email",
           //Add checkEmail field
           emailVerificationSuccess: "/signin?verified=true",
           // Library should add error query parameter in the URL, so user can use them to show the right message.
