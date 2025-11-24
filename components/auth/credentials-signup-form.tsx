@@ -16,13 +16,13 @@ import {
 import { Icons } from "@/components/icons";
 import { FormErrorMessage } from "@/components/auth/form-error-message";
 
-// We'll define this action later
 import { signUpWithEmailAndPassword } from "@/app/actions";
 import { signUpSchema, type SignUpValues } from "@/lib/schema";
 
 export function CredentialsSignUpForm() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
@@ -35,12 +35,17 @@ export function CredentialsSignUpForm() {
 
   async function onSubmit(data: SignUpValues) {
     setServerError(null);
+    setSuccessMessage(null);
 
-    // Call server action
     const result = await signUpWithEmailAndPassword(data);
 
     if (result?.error) {
       setServerError(result.error);
+    } else if (result?.success) {
+      setSuccessMessage(
+        result.message || "Verification email sent! Please check your inbox."
+      );
+      form.reset();
     }
   }
 
@@ -48,6 +53,16 @@ export function CredentialsSignUpForm() {
     <form onSubmit={form.handleSubmit(onSubmit)}>
       <FieldGroup>
         {serverError && <FormErrorMessage error={serverError} />}
+
+        {successMessage && (
+          <div
+            className="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 rounded-r-md flex items-center gap-3 text-sm shadow-sm animate-in fade-in-0 slide-in-from-top-1"
+            role="alert"
+          >
+            <Icons.check className="size-4 shrink-0" />
+            <p>{successMessage}</p>
+          </div>
+        )}
 
         {/* Name Field */}
         <Controller

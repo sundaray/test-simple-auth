@@ -1,6 +1,6 @@
 "use server";
 
-import { signIn, signOut } from "@/auth";
+import { signIn, signUp, signOut } from "@/auth";
 import { SuperAuthError } from "super-auth/core/errors";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { signInSchema, signUpSchema } from "@/lib/schema";
@@ -36,6 +36,7 @@ export async function signInWithEmailAndPassword(next: string, data: unknown) {
       redirectTo: `/${next}`,
     });
   } catch (error) {
+    console.log("Credential sign in error: ", error);
     if (isRedirectError(error)) {
       throw error;
     }
@@ -52,20 +53,38 @@ export async function signInWithEmailAndPassword(next: string, data: unknown) {
   }
 }
 
-// New Sign Up Action
+// Sign Up Action
 export async function signUpWithEmailAndPassword(data: unknown) {
   const parsed = signUpSchema.safeParse(data);
 
   if (!parsed.success) {
     return { error: "Invalid input data" };
   }
+
   try {
-    // TODO: Implement your library's signUp method here
-    // await auth.signUp({ ...parsed.data });
-    console.log("Sign up data:", parsed.data);
-    return { error: "Sign up not implemented yet." };
+    await signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      name: parsed.data.name,
+    });
+
+    // Success - return success message for the UI
+    return {
+      success: true,
+      message: "Verification email sent! Please check your inbox.",
+    };
   } catch (error) {
-    if (isRedirectError(error)) throw error;
-    return { error: "Something went wrong." };
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    if (error instanceof SuperAuthError) {
+      switch (error.name) {
+        case "AccountAlreadyExistsError":
+          return { error: "An account with this email already exists." };
+      }
+    }
+
+    return { error: "Something went wrong. Please try again." };
   }
 }

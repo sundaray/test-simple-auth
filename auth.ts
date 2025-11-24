@@ -6,8 +6,10 @@ import { users, accounts } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { resend } from "@/lib/resend";
 import { EmailVerificationTemplate } from "@/components/email-verification-template";
+import { PasswordResetTemplate } from "@/components/password-reset-template";
+import { PasswordChangeConfirmationTemplate } from "@/components/password-change-confirmation-template";
 
-export const { signIn, signOut, getUserSession, handler } = superAuth({
+export const { signIn, signUp, signOut, getUserSession, handler } = superAuth({
   baseUrl: process.env.BASE_URL!,
   session: {
     secret: process.env.SESSION_SECRET!,
@@ -91,30 +93,45 @@ export const { signIn, signOut, getUserSession, handler } = superAuth({
       onSignUp: {
         // Check if user with credenial account exists
         checkUserExists: async (email) => {
-          const existingUserAccount = await db.query.users.findFirst({
+          // Step 1: Find user by email
+          const user = await db.query.users.findFirst({
             where: eq(users.email, email),
-            with: {
-              accounts: {
-                where: eq(accounts.provider, "credential"),
-              },
-            },
           });
-          if (existingUserAccount) {
+
+          // If user doesn't exist at all, return false
+          if (!user) {
+            return false;
+          }
+
+          // Step 2: Check if this user has a credential account
+          const credentialAccount = await db.query.accounts.findFirst({
+            where: and(
+              eq(accounts.userId, user.id),
+              eq(accounts.provider, "credential")
+            ),
+          });
+
+          // Return true only if credential account exists
+          if (credentialAccount) {
             return true;
           }
           return false;
         },
         // Send verification email
         sendVerificationEmail: async ({ email, url }) => {
-          await resend.emails.send({
-            from: "auth@hemantasundaray.com",
-            to: [email],
-            subject: "Verify your email address",
-            react: EmailVerificationTemplate({
-              email,
-              verificationUrl: url,
-            }),
-          });
+          try {
+            await resend.emails.send({
+              from: "auth@hemantasundaray.com",
+              to: [email],
+              subject: "Verify your email address",
+              react: EmailVerificationTemplate({
+                email,
+                verificationUrl: url,
+              }),
+            });
+          } catch (error) {
+            console.log("Send verification email error: ", error);
+          }
         },
         // Create user after email verification
         createUser: async ({ email, hashedPassword, ...rest }) => {
@@ -155,24 +172,30 @@ export const { signIn, signOut, getUserSession, handler } = superAuth({
         },
       },
       onSignIn: async ({ email }) => {
+        // Step 1: Check if user exists by email
         const user = await db.query.users.findFirst({
           where: eq(users.email, email),
-          with: {
-            accounts: {
-              where: eq(accounts.provider, "credential"),
-              columns: {
-                passwordHash: true,
-              },
-            },
-          },
         });
 
-        if (!user || !user.accounts[0].passwordHash) {
+        // If user doesn't exist at all, return null
+        if (!user) {
           return null;
         }
 
-        const credentialAccount = user.accounts[0];
+        // Step 2: Now check if this user has a credential account
+        const credentialAccount = await db.query.accounts.findFirst({
+          where: and(
+            eq(accounts.userId, user.id),
+            eq(accounts.provider, "credential")
+          ),
+        });
 
+        // If no credential account exists, return null
+        if (!credentialAccount) {
+          return null;
+        }
+
+        // Step 3: Return user data with password hash
         return {
           email: user.email,
           name: user.name,
@@ -197,8 +220,27 @@ export const { signIn, signOut, getUserSession, handler } = superAuth({
           }
           return { exists: true, passwordHash: user?.accounts[0].passwordHash };
         },
-        sendPasswordResetEmail: async ({ email, url }) => {},
-        sendPasswordChangeEmail: async () => {},
+        sendPasswordResetEmail: async ({ email, url }) => {
+          await resend.emails.send({
+            from: "auth@hemantasundaray.com",
+            to: [email],
+            subject: "Reset your password",
+            react: PasswordResetTemplate({
+              email,
+              resetUrl: url,
+            }),
+          });
+        },
+        sendPasswordChangeEmail: async ({ email }) => {
+          await resend.emails.send({
+            from: "auth@hemantasundaray.com",
+            to: [email],
+            subject: "Password changed successfully",
+            react: PasswordChangeConfirmationTemplate({
+              email,
+            }),
+          });
+        },
         updatePassword: async ({ email, hashedPassword }) => {
           const user = await db.query.users.findFirst({
             where: eq(users.email, email),
