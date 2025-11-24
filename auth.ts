@@ -9,7 +9,15 @@ import { EmailVerificationTemplate } from "@/components/email-verification-templ
 import { PasswordResetTemplate } from "@/components/password-reset-template";
 import { PasswordChangeConfirmationTemplate } from "@/components/password-change-confirmation-template";
 
-export const { signIn, signUp, signOut, getUserSession, handler } = superAuth({
+export const {
+  signIn,
+  signUp,
+  signOut,
+  getUserSession,
+  forgotPassword,
+  resetPassword,
+  handler,
+} = superAuth({
   baseUrl: process.env.BASE_URL!,
   session: {
     secret: process.env.SESSION_SECRET!,
@@ -260,10 +268,10 @@ export const { signIn, signUp, signOut, getUserSession, handler } = superAuth({
             );
         },
         redirects: {
-          checkEmail: "/",
+          checkEmail: "/check-email",
           resetForm: "/reset-password",
-          resetPasswordSuccess: "/",
-          resetPasswordError: "/",
+          resetPasswordSuccess: "/signin?password-reset=success",
+          resetPasswordError: "/forgot-password?error=true",
         },
       },
     }),
