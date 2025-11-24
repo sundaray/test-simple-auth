@@ -59,7 +59,6 @@ export async function signUpWithEmailAndPassword(data: unknown) {
   if (!parsed.success) {
     return { error: "Invalid input data" };
   }
-
   try {
     // TODO: Implement your library's signUp method here
     // await auth.signUp({ ...parsed.data });

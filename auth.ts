@@ -4,9 +4,11 @@ import { Credential } from "super-auth/providers/credential";
 import { db } from "@/db";
 import { users, accounts } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { resend } from "@/lib/resend";
+import { EmailVerificationTemplate } from "@/components/email-verification-template";
 
-export const { signIn, signOut, getUserSession, handlers } = superAuth({
-  baseUrl: "process.env.BASE_URL!",
+export const { signIn, signOut, getUserSession, handler } = superAuth({
+  baseUrl: process.env.BASE_URL!,
   session: {
     secret: process.env.SESSION_SECRET!,
     maxAge: 60 * 60 * 24 * 7,
@@ -15,7 +17,6 @@ export const { signIn, signOut, getUserSession, handlers } = superAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirectUri: process.env.GOOGLE_REDIRECT_UI!,
       onAuthenticated: async (userClaims) => {
         // Step 1: Check if THIS specific Google account is already linked
         const existingGoogleAccount = await db.query.accounts.findFirst({
@@ -104,27 +105,53 @@ export const { signIn, signOut, getUserSession, handlers } = superAuth({
           return false;
         },
         // Send verification email
-        sendVerificationEmail: async ({ email, url }) => {},
+        sendVerificationEmail: async ({ email, url }) => {
+          await resend.emails.send({
+            from: "auth@hemantasundaray.com",
+            to: [email],
+            subject: "Verify your email address",
+            react: EmailVerificationTemplate({
+              email,
+              verificationUrl: url,
+            }),
+          });
+        },
         // Create user after email verification
         createUser: async ({ email, hashedPassword, ...rest }) => {
-          // Existing email and account
-          const existingUserAccount = await db.query.users.findFirst({
+          const existingUser = await db.query.users.findFirst({
             where: eq(users.email, email),
-            with: {
-              accounts: {
-                where: eq(accounts.provider, "credential"),
-              },
-            },
           });
 
-          if (existingUserAccount) {
+          let userId: string;
+
+          // User exists (via Google), just link the new credential account
+          if (existingUser) {
+            userId = existingUser.id;
+
+            // Mark email as verified in the suers table
+            await db
+              .update(users)
+              .set({ emailVerified: true })
+              .where(eq(users.id, userId));
+          } else {
+            // brand new user
+            const [newUser] = await db
+              .insert(users)
+              .values({ email, emailVerified: true })
+              .returning();
+            userId = newUser.id;
           }
 
-          // Check if user exists by email
-
-          // Email not found - Add email and account
-
-          // Email found - update email_verified column to true and create an account
+          // Create the credential account
+          await db.insert(accounts).values({
+            userId,
+            provider: "credential",
+            passwordHash: hashedPassword,
+          });
+        },
+        redirects: {
+          emailVerificationSuccess: "/signin?verified=true",
+          emailVerificationError: "/",
         },
       },
       onSignIn: async ({ email }) => {
@@ -152,6 +179,50 @@ export const { signIn, signOut, getUserSession, handlers } = superAuth({
           picture: user.picture,
           hashedPassword: credentialAccount.passwordHash,
         };
+      },
+
+      onPasswordReset: {
+        checkUserExists: async ({ email }) => {
+          const user = await db.query.users.findFirst({
+            where: eq(users.email, email),
+            with: {
+              accounts: {
+                where: eq(accounts.provider, "credential"),
+              },
+            },
+          });
+
+          if (!user) {
+            return { exists: false };
+          }
+          return { exists: true, passwordHash: user?.accounts[0].passwordHash };
+        },
+        sendPasswordResetEmail: async ({ email, url }) => {},
+        sendPasswordChangeEmail: async () => {},
+        updatePassword: async ({ email, hashedPassword }) => {
+          const user = await db.query.users.findFirst({
+            where: eq(users.email, email),
+          });
+
+          if (!user) return;
+
+          // Update the password in the accounts table
+          await db
+            .update(accounts)
+            .set({ passwordHash: hashedPassword })
+            .where(
+              and(
+                eq(accounts.userId, user.id),
+                eq(accounts.provider, "credential")
+              )
+            );
+        },
+        redirects: {
+          checkEmail: "/",
+          resetForm: "/reset-password",
+          resetPasswordSuccess: "/",
+          resetPasswordError: "/",
+        },
       },
     }),
   ],
