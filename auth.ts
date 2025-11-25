@@ -16,6 +16,7 @@ export const {
   getUserSession,
   forgotPassword,
   resetPassword,
+  extendUserSessionMiddleware,
   handler,
 } = superAuth({
   baseUrl: process.env.BASE_URL!,
@@ -176,9 +177,7 @@ export const {
         },
         redirects: {
           checkEmail: "/check-email",
-          //Add checkEmail field
-          emailVerificationSuccess: "/signin?verified=true",
-          // Library should add error query parameter in the URL, so user can use them to show the right message.
+          emailVerificationSuccess: "/",
           emailVerificationError: "/",
         },
       },
