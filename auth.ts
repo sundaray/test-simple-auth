@@ -270,10 +270,10 @@ export const {
             );
         },
         redirects: {
-          checkEmail: "/check-email",
-          resetForm: "/reset-password",
-          resetPasswordSuccess: "/signin?password-reset=success",
-          resetPasswordError: "/forgot-password?error=true",
+          forgotPasswordSuccess: "/check-email",
+          // resetForm: "/reset-password",
+          // resetPasswordSuccess: "/signin?password-reset=success",
+          // resetPasswordError: "/forgot-password?error=true",
         },
       },
     }),
