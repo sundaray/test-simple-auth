@@ -10,6 +10,7 @@ export const siteConfig: SiteConfig = {
     { title: "Submit", href: "/submit" },
     { title: "Categories", href: "/categories" },
     { title: "Client", href: "/client" },
+    { title: "Server", href: "/server" },
   ],
   adminNav: [
     { id: "submission-management", title: "Submission Management" },

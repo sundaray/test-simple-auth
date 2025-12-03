@@ -3,7 +3,7 @@
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { signInWithGoogleAction } from "@/app/actions";
+import { signInWithGoogle } from "@/app/actions";
 
 export function SignInWithGoogleForm() {
   const [isPending, setIsPending] = useState(false);
@@ -11,7 +11,7 @@ export function SignInWithGoogleForm() {
   async function handleSignInWithGoogle() {
     try {
       setIsPending(true);
-      await signInWithGoogleAction();
+      await signInWithGoogle();
     } catch (error) {
       console.error("Sign in error:", error);
       setIsPending(false);

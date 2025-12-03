@@ -10,7 +10,7 @@ import {
   resetPasswordSchema,
 } from "@/lib/schema";
 
-export async function signInWithGoogleAction() {
+export async function signInWithGoogle() {
   try {
     await signIn("google", { redirectTo: "/dashboard" });
   } catch (error) {
@@ -130,7 +130,6 @@ export async function resetPasswordAction(token: string, newPassword: string) {
 
   try {
     await resetPassword(token, parsed.data.password);
-    // This will redirect to /signin?password-reset=success
   } catch (error) {
     console.log("Reset password error: ", error);
     if (isRedirectError(error)) {
@@ -141,12 +140,6 @@ export async function resetPasswordAction(token: string, newPassword: string) {
       switch (error.name) {
         case "InvalidPasswordResetTokenError":
           return { error: "Invalid or expired reset link." };
-        case "VerifyPasswordResetTokenError":
-          return { error: "Invalid or expired reset link." };
-        case "PasswordResetTokenAlreadyUsedError":
-          return { error: "This reset link has already been used." };
-        case "UserNotFoundError":
-          return { error: "User not found." };
       }
     }
 
