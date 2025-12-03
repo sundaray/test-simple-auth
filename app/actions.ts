@@ -80,7 +80,9 @@ export async function signUpWithEmailAndPassword(data: unknown) {
     if (error instanceof SuperAuthError) {
       switch (error.name) {
         case "AccountAlreadyExistsError":
-          return { error: "An account with this email already exists." };
+          return {
+            error: "An account with this email already exists. Please sign in.",
+          };
       }
     }
 

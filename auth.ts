@@ -1,6 +1,6 @@
-import { superAuth } from "super-auth/next-js";
-import { Google } from "super-auth/providers/google";
-import { Credential } from "super-auth/providers/credential";
+import { lucidAuth } from "lucidauth/next-js";
+import { Google } from "lucidauth/providers/google";
+import { Credential } from "lucidauth/providers/credential";
 import { db } from "@/db";
 import { users, accounts } from "@/db/schema";
 import { eq, and, exists } from "drizzle-orm";
@@ -18,11 +18,11 @@ export const {
   resetPassword,
   extendUserSessionMiddleware,
   handler,
-} = superAuth({
+} = lucidAuth({
   baseUrl: process.env.BASE_URL!,
   session: {
     secret: process.env.SESSION_SECRET!,
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60,
   },
   providers: [
     Google({
@@ -101,7 +101,7 @@ export const {
     Credential({
       onSignUp: {
         // Check if user with credenial account exists
-        checkUserExists: async (email) => {
+        checkUserExists: async ({ email }) => {
           // Step 1: Find user by email
           const user = await db.query.users.findFirst({
             where: eq(users.email, email),
@@ -241,7 +241,7 @@ export const {
             }),
           });
         },
-        sendPasswordChangeEmail: async ({ email }) => {
+        sendPasswordUpdateEmail: async ({ email }) => {
           await resend.emails.send({
             from: "auth@hemantasundaray.com",
             to: [email],
