@@ -8,6 +8,9 @@ import { resend } from "@/lib/resend";
 import { EmailVerificationTemplate } from "@/components/email-verification-template";
 import { PasswordResetTemplate } from "@/components/password-reset-template";
 import { PasswordChangeConfirmationTemplate } from "@/components/password-change-confirmation-template";
+import { updatePassword } from "./lib/auth/update-password";
+import { sendPasswordResetEmail } from "./lib/auth/send-password-reset-email";
+import { sendPasswordUpdateEmail } from "./lib/auth/send-password-update-email";
 
 export const {
   signIn,
@@ -176,7 +179,7 @@ export const {
           });
         },
         redirects: {
-          checkEmail: "/check-email",
+          signUpSuccess: "/check-email",
           emailVerificationSuccess: "/",
           emailVerificationError: "/",
         },
@@ -230,50 +233,14 @@ export const {
           }
           return { exists: true, passwordHash: user?.accounts[0].passwordHash };
         },
-        sendPasswordResetEmail: async ({ email, url }) => {
-          await resend.emails.send({
-            from: "auth@hemantasundaray.com",
-            to: [email],
-            subject: "Reset your password",
-            react: PasswordResetTemplate({
-              email,
-              resetUrl: url,
-            }),
-          });
-        },
-        sendPasswordUpdateEmail: async ({ email }) => {
-          await resend.emails.send({
-            from: "auth@hemantasundaray.com",
-            to: [email],
-            subject: "Password changed successfully",
-            react: PasswordChangeConfirmationTemplate({
-              email,
-            }),
-          });
-        },
-        updatePassword: async ({ email, hashedPassword }) => {
-          const user = await db.query.users.findFirst({
-            where: eq(users.email, email),
-          });
-
-          if (!user) return;
-
-          // Update the password in the accounts table
-          await db
-            .update(accounts)
-            .set({ passwordHash: hashedPassword })
-            .where(
-              and(
-                eq(accounts.userId, user.id),
-                eq(accounts.provider, "credential")
-              )
-            );
-        },
+        sendPasswordResetEmail,
+        updatePassword,
+        sendPasswordUpdateEmail,
         redirects: {
           forgotPasswordSuccess: "/check-email",
-          // resetForm: "/reset-password",
-          // resetPasswordSuccess: "/signin?password-reset=success",
-          // resetPasswordError: "/forgot-password?error=true",
+          tokenVerificationSuccess: "/reset-password",
+          tokenVerificationError: "/forgot-password?error=true",
+          resetPasswordSuccess: "/signin?password-reset=success",
         },
       },
     }),
