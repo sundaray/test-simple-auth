@@ -101,19 +101,19 @@ export async function forgotPasswordAction(email: string) {
 
   try {
     await forgotPassword(parsed.data.email);
-    // This will redirect to /check-email
   } catch (error) {
     if (isRedirectError(error)) {
       throw error;
     }
 
+    // This means forgot password processing failed. this is a true error.
     if (error instanceof LucidAuthError) {
       // For security, don't reveal if email exists or not
       console.error("Forgot password error:", error);
     }
 
     // Always show success message (for security)
-    return { error: null };
+    return { error: "Something went wrong. Please try again." };
   }
 }
 

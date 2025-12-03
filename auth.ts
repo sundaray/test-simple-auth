@@ -29,80 +29,85 @@ export const {
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      onAuthenticated: async (userClaims) => {
-        // Step 1: Check if THIS specific Google account is already linked
-        const existingGoogleAccount = await db.query.accounts.findFirst({
-          where: and(
-            eq(accounts.provider, "google"),
-            eq(accounts.providerAccountId, userClaims.sub)
-          ),
-          with: { user: true },
-        });
+      onAuthentication: {
+        createGoogleUser: async (userClaims) => {
+          // Step 1: Check if THIS specific Google account is already linked
+          const existingGoogleAccount = await db.query.accounts.findFirst({
+            where: and(
+              eq(accounts.provider, "google"),
+              eq(accounts.providerAccountId, userClaims.sub)
+            ),
+            with: { user: true },
+          });
 
-        if (existingGoogleAccount) {
-          // Scenario 1: Google account exists - sign in
-          return {
-            userId: existingGoogleAccount.user.id,
-            email: existingGoogleAccount.user.email,
-            name: existingGoogleAccount.user.name,
-            picture: existingGoogleAccount.user.picture,
-            provider: "google",
-          };
-        }
+          if (existingGoogleAccount) {
+            // Scenario 1: Google account exists - sign in
+            return {
+              userId: existingGoogleAccount.user.id,
+              email: existingGoogleAccount.user.email,
+              name: existingGoogleAccount.user.name,
+              picture: existingGoogleAccount.user.picture,
+              provider: "google",
+            };
+          }
 
-        // Step 2: Check if user exists by email
-        const existingUser = await db.query.users.findFirst({
-          where: eq(users.email, userClaims.email),
-        });
+          // Step 2: Check if user exists by email
+          const existingUser = await db.query.users.findFirst({
+            where: eq(users.email, userClaims.email),
+          });
 
-        if (existingUser) {
-          // Scenario 2: User exists, but Google account doesn't
-          // Create a Google account
+          if (existingUser) {
+            // Scenario 2: User exists, but Google account doesn't
+            // Create a Google account
+            await db.insert(accounts).values({
+              userId: existingUser.id,
+              provider: "google",
+              providerAccountId: userClaims.sub,
+            });
+
+            return {
+              userId: existingUser.id,
+              email: existingUser.email,
+              name: existingUser.name,
+              picture: existingUser.picture,
+              provider: "google",
+            };
+          }
+
+          // Step 3: No user exists - create both user AND account
+          const [newUser] = await db
+            .insert(users)
+            .values({
+              email: userClaims.email,
+              emailVerified: userClaims.email_verified ?? false,
+              name: userClaims.name ?? null,
+              picture: userClaims.picture ?? null,
+            })
+            .returning();
+
           await db.insert(accounts).values({
-            userId: existingUser.id,
+            userId: newUser.id,
             provider: "google",
             providerAccountId: userClaims.sub,
           });
 
           return {
-            userId: existingUser.id,
-            email: existingUser.email,
-            name: existingUser.name,
-            picture: existingUser.picture,
+            userId: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
+            picture: newUser.picture,
             provider: "google",
           };
-        }
-
-        // Step 3: No user exists - create both user AND account
-        const [newUser] = await db
-          .insert(users)
-          .values({
-            email: userClaims.email,
-            emailVerified: userClaims.email_verified ?? false,
-            name: userClaims.name ?? null,
-            picture: userClaims.picture ?? null,
-          })
-          .returning();
-
-        await db.insert(accounts).values({
-          userId: newUser.id,
-          provider: "google",
-          providerAccountId: userClaims.sub,
-        });
-
-        return {
-          userId: newUser.id,
-          email: newUser.email,
-          name: newUser.name,
-          picture: newUser.picture,
-          provider: "google",
-        };
+        },
+        redirects: {
+          error: "/",
+        },
       },
     }),
     Credential({
       onSignUp: {
         // Check if user with credenial account exists
-        checkUserExists: async ({ email }) => {
+        checkCredentialUserExists: async ({ email }) => {
           // Step 1: Find user by email
           const user = await db.query.users.findFirst({
             where: eq(users.email, email),
@@ -144,7 +149,7 @@ export const {
           }
         },
         // Create user after email verification
-        createUser: async ({ email, hashedPassword, ...rest }) => {
+        createCredentialUser: async ({ email, hashedPassword, ...rest }) => {
           const existingUser = await db.query.users.findFirst({
             where: eq(users.email, email),
           });
@@ -182,41 +187,42 @@ export const {
           emailVerificationError: "/",
         },
       },
-      onSignIn: async ({ email }) => {
-        // Step 1: Check if user exists by email
-        const user = await db.query.users.findFirst({
-          where: eq(users.email, email),
-        });
+      onSignIn: {
+        getCredentialUser: async ({ email }) => {
+          // Step 1: Check if user exists by email
+          const user = await db.query.users.findFirst({
+            where: eq(users.email, email),
+          });
 
-        // If user doesn't exist at all, return null
-        if (!user) {
-          return null;
-        }
+          // If user doesn't exist at all, return null
+          if (!user) {
+            return null;
+          }
 
-        // Step 2: Now check if this user has a credential account
-        const credentialAccount = await db.query.accounts.findFirst({
-          where: and(
-            eq(accounts.userId, user.id),
-            eq(accounts.provider, "credential")
-          ),
-        });
+          // Step 2: Now check if this user has a credential account
+          const credentialAccount = await db.query.accounts.findFirst({
+            where: and(
+              eq(accounts.userId, user.id),
+              eq(accounts.provider, "credential")
+            ),
+          });
 
-        // If no credential account exists, return null
-        if (!credentialAccount) {
-          return null;
-        }
+          // If no credential account exists, return null
+          if (!credentialAccount) {
+            return null;
+          }
 
-        // Step 3: Return user data with password hash
-        return {
-          email: user.email,
-          name: user.name,
-          picture: user.picture,
-          hashedPassword: credentialAccount.passwordHash,
-        };
+          // Step 3: Return user data with password hash
+          return {
+            email: user.email,
+            name: user.name,
+            picture: user.picture,
+            hashedPassword: credentialAccount.passwordHash,
+          };
+        },
       },
-
       onPasswordReset: {
-        checkUserExists: async ({ email }) => {
+        checkCredentialUserExists: async ({ email }) => {
           const user = await db.query.users.findFirst({
             where: eq(users.email, email),
             with: {
@@ -229,7 +235,7 @@ export const {
           if (!user) {
             return { exists: false };
           }
-          return { exists: true, passwordHash: user?.accounts[0].passwordHash };
+          return { exists: true };
         },
         sendPasswordResetEmail,
         updatePassword,
