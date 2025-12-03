@@ -1,6 +1,6 @@
 "use client";
 
-import { useUserSession } from "super-auth/react";
+import { useUserSession } from "lucidauth/react";
 
 export default function ClientPage() {
   const { isLoading, isError, isAuthenticated, session } = useUserSession();
@@ -17,5 +17,5 @@ export default function ClientPage() {
     return <h1>Please sign in.</h1>;
   }
 
-  return <h1 className="text-4xl mt-40">{session?.email}</h1>;
+  return <h1 className="text-4xl mt-40">{session?.user.email}</h1>;
 }

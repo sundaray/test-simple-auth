@@ -1,7 +1,7 @@
 "use server";
 
 import { signIn, signUp, signOut, forgotPassword, resetPassword } from "@/auth";
-import { SuperAuthError } from "super-auth/core/errors";
+import { LucidAuthError } from "lucidauth/core/errors";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import {
   signInSchema,
@@ -14,17 +14,18 @@ export async function signInWithGoogleAction() {
   try {
     await signIn("google", { redirectTo: "/dashboard" });
   } catch (error) {
-    if (error instanceof SuperAuthError) {
-      console.log("Google sign-in error: ", error);
-    }
+    console.error("Sign in with Google error ", error);
     if (isRedirectError(error)) {
       throw error;
+    }
+    if (error instanceof LucidAuthError) {
+      console.log("Google sign-in error: ", error);
     }
   }
 }
 
 export async function signOutAction() {
-  await signOut();
+  await signOut({ redirectTo: "/" });
 }
 
 export async function signInWithEmailAndPassword(next: string, data: unknown) {
@@ -45,7 +46,7 @@ export async function signInWithEmailAndPassword(next: string, data: unknown) {
     if (isRedirectError(error)) {
       throw error;
     }
-    if (error instanceof SuperAuthError) {
+    if (error instanceof LucidAuthError) {
       switch (error.name) {
         case "AccountNotFoundError":
           return { error: "No account found with this email. Please sign up." };
@@ -77,7 +78,7 @@ export async function signUpWithEmailAndPassword(data: unknown) {
       throw error;
     }
 
-    if (error instanceof SuperAuthError) {
+    if (error instanceof LucidAuthError) {
       switch (error.name) {
         case "AccountAlreadyExistsError":
           return {
@@ -106,7 +107,7 @@ export async function forgotPasswordAction(email: string) {
       throw error;
     }
 
-    if (error instanceof SuperAuthError) {
+    if (error instanceof LucidAuthError) {
       // For security, don't reveal if email exists or not
       console.error("Forgot password error:", error);
     }
@@ -136,7 +137,7 @@ export async function resetPasswordAction(token: string, newPassword: string) {
       throw error;
     }
 
-    if (error instanceof SuperAuthError) {
+    if (error instanceof LucidAuthError) {
       switch (error.name) {
         case "InvalidPasswordResetTokenError":
           return { error: "Invalid or expired reset link." };
