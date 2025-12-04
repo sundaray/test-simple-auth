@@ -10,22 +10,22 @@ import {
 } from "@/lib/schema";
 import { rethrowIfRedirect } from "@/lib/next-redirect";
 
-export async function signInWithGoogle() {
-  try {
-    await signIn("google", { redirectTo: "/dashboard" });
-  } catch (error) {
-    rethrowIfRedirect(error);
+  export async function signInWithGoogle() {
+    try {
+      await signIn("google", { redirectTo: "/dashboard" });
+    } catch (error) {
+      rethrowIfRedirect(error);
 
-    console.log("signInWithGoogle error: ", error);
+      console.log("signInWithGoogle error: ", error);
 
-    if (error instanceof LucidAuthError) {
-      return { error: "Google sign-in failed. Please try again." };
+      if (error instanceof LucidAuthError) {
+        return { error: "Google sign-in failed. Please try again." };
+      }
+      return {
+        error: "Something went wrong. Please try again.",
+      };
     }
-    return {
-      error: "Something went wrong. Please try again.",
-    };
   }
-}
 
 export async function signOutAction() {
   await signOut({ redirectTo: "/" });
