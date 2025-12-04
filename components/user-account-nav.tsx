@@ -2,10 +2,10 @@ import { UserAccountNavClient } from "@/components/user-account-nav-client";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { getUserSession } from "@/auth";
+import { getSession } from "@/lib/get-session";
 
 export async function UserAccountNav() {
-  const user = await getUserSession();
+  const { user } = await getSession();
 
   return (
     <div className="hidden md:block">

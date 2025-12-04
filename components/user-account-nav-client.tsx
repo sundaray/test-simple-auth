@@ -14,8 +14,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { signOutAction } from "@/app/actions";
+import { User } from "lucidauth/core/types";
 
-export function UserAccountNavClient({ user }: { user: any }) {
+export function UserAccountNavClient({ user }: { user: User }) {
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
